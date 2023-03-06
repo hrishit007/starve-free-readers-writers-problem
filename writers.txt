@@ -1,0 +1,17 @@
+Wait in
+Wait out
+if (counter_in==counter_out)
+    Signal out
+else
+    wait=1
+    Signal out
+    Wait wrt
+    wait=0
+.
+.
+.
+[Execute critical section here]
+.
+.
+.
+Signal in 
