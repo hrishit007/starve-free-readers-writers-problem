@@ -6,17 +6,37 @@ Multiple processes that run in a computer may need to access the same resources 
 
 ## What is Starve Free?
 Let us first understand what **starvation** is.
-In a computer there may be many processes being executed at the same time, it may be possible that the computer is **not** able to execute all the process **instantly** (i.e. as soon as the CPU receives the process request) because of CPU limitations and other factors. In such conditions, the **CPU scheduler** picks the processes for execution and the picked processes are executed. 
+In a computer there may be many processes being executed at the same time, it may be possible that the computer is **not** able to execute all the process **instantly** (i.e. as soon as the CPU receives the process request) because of CPU limitations and other factors. In such conditions, the **CPU scheduler** picks the processes for execution and the picked processes are executed. The remaining processes wait until the CPU Scheduler picks them.
 Now, it may be possible that a particular process is never picked, thus the process keeps waiting to be executed. This is called **starvation**. An algorithm that avoids starvation is called **Starve Free**.
 
 
+## How does a process starve in Readers Writers prblem?
+Starvation in readers writers problem depends on the type of algorithm used. 
+There are two common algorithms used:
+    * First Readers-Writers Problem
+    * Second Readers-Writers Problem
 
+### First Readers-Writers Problem
+In the First Readers-Writers problem, mutual exclusion among writers is maintained, and multiple readers are allwed to read at the same time, but preference is given to `readers`. Let us take an example,
+Consider requests from various processes to a particular file in this order:
+    * read file from line start1-end1
+    * read file from line start2-end2
+    * write some data in file from line start3
+    * read file from line start4-end4
+    * read file from line start5-end5
+    * read file from line start6-end6
+    * and so on.....
+Now, the first two processes can execute simultaneously because both are read operations, let these 2 operations be reading the file and a write operation arrives, so the write operation waits for the read operation to complete. However, during this waiting period there can be other read requests. The first readers-writers solution allows these read requests to start reading and keeps the write request waiting and hence the write process starves.
 
+### Second Readers-Writers Problem
+In the Second Readers-Writers problem, mutual exclusion among writers is maintained, and multiple readers are allwed to read at the same time, but preference is given to `writers`. Let us take requests in same order as given above.
+
+First, the two read processes are executed and as soon as write request is received, it waits for read to complete. No other read process can enter critical section. Now write process writes. Now if during writing another write process enters then after completion of the first write process, since priority is to the writer, the next write process is executed and this can go on and hence readers starve.
 
 
 ## Starve Free Readers-Writers Algorithm
 
-The pseducode for the starve free readers-writer problem can be found in the ``readers.txt`` and ``writers.txt`` files. The implementation of read request is shown in ``readers.txt`` and write requests is shown in ``writers.txt``. 
+The pseducode for the starve free readers-writer problem can be found in the ``readers.txt`` and ``writers.txt`` files. The implementation of read requests is shown in ``readers.txt`` and write requests is shown in ``writers.txt``. 
 Here is a detailed explanation of the code.
 
 #### Global Variables used
@@ -54,7 +74,7 @@ Signal out
 
 First we use the in semaphore for updating counter_in with mutual exclusion, therefore only one process can update this at a time.
 Now we execute the critical section, which here is the reading of the file.
-Now we use the out semaphore, again for mutual exclusion and increase counter_out, next we check if any process is waiting to write into the file. If yes, then we signal the wrt semaphore.
+Then we use the out semaphore, again for mutual exclusion and increase counter_out, next we check if any process is waiting to write into the file. If yes, then we signal the wrt semaphore.
 
 
 #### Writers Section
@@ -86,6 +106,6 @@ Next we check if counter_in is equal to counter_out,
 #### How does the algorithm work?
 
 Consider a case when write statement is first, now we wait on in and out, check if counter_in is equal to counter_out or not, since initially both are set to 0, this condition is true, we release out then write to the file and then release in.
-Now let us consider that another write/read request has been made when this process was writing to the file. Since the in semaphore is not yet released and both the read and write request first wait for the in semaphore, therefore none of them can enter the critical section and hence mutual exclusionis prevented.
+Now let us consider that another write/read request has been made when this process was writing to the file. Since the in semaphore is not yet released and both the read and write request first wait for the in semaphore, therefore none of them can enter the critical section and hence mutual exclusion is prevented.
 
 Let us consider a case when some read requests have been made and a write request arrives. Again the write request checks if counter_in is equal to counter_out. If it is equal then no process is reading and it executes as stated above. However, if they are not equal, it sets wait to 1 and waits on wrt. Also if we have any more read requests, the read requests do not execute because they keep waiting on in and in will be released only by the write process. As soon as all processes finish reading, wrt is signalled, then write process writes onto the file and finally signals in . Now any other process (read or write) that was waiting on the in semaphore can resume it's execution.
